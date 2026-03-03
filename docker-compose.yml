@@ -12,7 +12,8 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data  # Datos persistentes
+      - ./postgres/init:/docker-entrypoint-initdb.d  # Scripts de inicialización
     networks:
       - app_network
     healthcheck:
@@ -20,6 +21,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped  # Reinicio automático
 
   user-service:
     build: ./user-service
@@ -38,6 +40,7 @@ services:
     networks:
       - app_network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
 
   project-service:
     build: ./project-service
@@ -56,6 +59,7 @@ services:
     networks:
       - app_network
     command: uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload
+    restart: unless-stopped
 
   frontend:
     build: ./frontend
@@ -75,9 +79,11 @@ services:
       - app_network
     stdin_open: true
     tty: true
+    restart: unless-stopped
 
 volumes:
-  postgres_data:
+  postgres_data:  # Volumen nombrado para persistencia
+    name: postgres_data
 
 networks:
   app_network:
